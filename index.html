@@ -1,26 +1,22 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
 
 <meta charset="UTF-8">
 
-<!-- BLOCCO ZOOM MOBILE -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Mini Battle Royale</title>
 
 <style>
 
-html,body{
+body{
 margin:0;
-padding:0;
 overflow:hidden;
 background:black;
 touch-action:none;
-}
-
-canvas{
-display:block;
 }
 
 #ui{
@@ -29,7 +25,6 @@ top:10px;
 left:10px;
 color:white;
 font-family:Arial;
-font-size:18px;
 }
 
 #controls{
@@ -38,34 +33,33 @@ bottom:20px;
 left:20px;
 }
 
-button{
-width:60px;
-height:60px;
-font-size:25px;
-margin:5px;
-border:none;
-border-radius:10px;
-background:rgba(255,255,255,0.3);
-color:white;
-}
-
 #actions{
 position:absolute;
 bottom:20px;
 right:20px;
 }
 
+button{
+width:70px;
+height:70px;
+font-size:25px;
+border-radius:10px;
+border:none;
+margin:5px;
+background:rgba(255,255,255,0.3);
+color:white;
+}
+
 </style>
 
 </head>
+
 <body>
 
 <div id="ui">
 <div id="hp">HP:100</div>
 <div id="storm">Storm:200</div>
 </div>
-
-<!-- FRECCETTE MOVIMENTO -->
 
 <div id="controls">
 
@@ -80,8 +74,6 @@ right:20px;
 </div>
 
 </div>
-
-<!-- AZIONI -->
 
 <div id="actions">
 
@@ -100,6 +92,8 @@ right:20px;
 
 const scene = new THREE.Scene()
 
+scene.background = new THREE.Color(0x87ceeb)
+
 const camera = new THREE.PerspectiveCamera(
 75,
 window.innerWidth/window.innerHeight,
@@ -114,26 +108,32 @@ renderer.setSize(window.innerWidth,window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 ////////////////////////////////////////////////////////
-// LUCE
+// LUCI
 ////////////////////////////////////////////////////////
 
-const light = new THREE.DirectionalLight(0xffffff,1)
+const ambient = new THREE.AmbientLight(0xffffff,0.6)
 
-light.position.set(50,100,50)
+scene.add(ambient)
 
-scene.add(light)
+const sun = new THREE.DirectionalLight(0xffffff,1)
+
+sun.position.set(50,100,50)
+
+scene.add(sun)
 
 ////////////////////////////////////////////////////////
 // TERRENO
 ////////////////////////////////////////////////////////
 
-const groundGeo = new THREE.PlaneGeometry(500,500)
+const ground = new THREE.Mesh(
 
-const groundMat = new THREE.MeshLambertMaterial({color:0x228822})
+new THREE.PlaneGeometry(500,500),
 
-const ground = new THREE.Mesh(groundGeo,groundMat)
+new THREE.MeshLambertMaterial({color:0x228822})
 
-ground.rotation.x = -Math.PI/2
+)
+
+ground.rotation.x=-Math.PI/2
 
 scene.add(ground)
 
@@ -141,11 +141,13 @@ scene.add(ground)
 // PLAYER
 ////////////////////////////////////////////////////////
 
-const playerGeo = new THREE.BoxGeometry(2,4,2)
+const player = new THREE.Mesh(
 
-const playerMat = new THREE.MeshLambertMaterial({color:0x00aaff})
+new THREE.BoxGeometry(2,4,2),
 
-const player = new THREE.Mesh(playerGeo,playerMat)
+new THREE.MeshLambertMaterial({color:0x00aaff})
+
+)
 
 player.position.y=2
 
@@ -172,7 +174,7 @@ onGround=false
 }
 
 ////////////////////////////////////////////////////////
-// MOVIMENTO TOUCH
+// MOVIMENTO
 ////////////////////////////////////////////////////////
 
 const move={up:false,down:false,left:false,right:false}
@@ -181,8 +183,13 @@ function bindButton(id,dir){
 
 const b=document.getElementById(id)
 
-b.ontouchstart=()=>move[dir]=true
-b.ontouchend=()=>move[dir]=false
+b.addEventListener("pointerdown",()=>move[dir]=true)
+
+b.addEventListener("pointerup",()=>move[dir]=false)
+
+b.addEventListener("pointercancel",()=>move[dir]=false)
+
+b.addEventListener("pointerleave",()=>move[dir]=false)
 
 }
 
@@ -199,11 +206,13 @@ const bullets=[]
 
 function shoot(){
 
-const geo = new THREE.SphereGeometry(0.3)
+const bullet = new THREE.Mesh(
 
-const mat = new THREE.MeshBasicMaterial({color:0xffff00})
+new THREE.SphereGeometry(0.3),
 
-const bullet = new THREE.Mesh(geo,mat)
+new THREE.MeshBasicMaterial({color:0xffff00})
+
+)
 
 bullet.position.copy(player.position)
 
@@ -215,8 +224,8 @@ scene.add(bullet)
 
 }
 
-document.getElementById("shoot").onclick=shoot
-document.getElementById("jump").onclick=jump
+document.getElementById("shoot").addEventListener("click",shoot)
+document.getElementById("jump").addEventListener("click",jump)
 
 ////////////////////////////////////////////////////////
 // BOT
@@ -226,16 +235,20 @@ const bots=[]
 
 function spawnBot(){
 
-const geo = new THREE.BoxGeometry(2,4,2)
+const bot = new THREE.Mesh(
 
-const mat = new THREE.MeshLambertMaterial({color:0xff0000})
+new THREE.BoxGeometry(2,4,2),
 
-const bot = new THREE.Mesh(geo,mat)
+new THREE.MeshLambertMaterial({color:0xff0000})
+
+)
 
 bot.position.set(
+
 Math.random()*100-50,
 2,
 Math.random()*100-50
+
 )
 
 bots.push(bot)
@@ -259,8 +272,10 @@ stormRadius-=0.02
 document.getElementById("storm").innerText="Storm:"+Math.floor(stormRadius)
 
 const dist=Math.sqrt(
+
 player.position.x*player.position.x+
 player.position.z*player.position.z
+
 )
 
 if(dist>stormRadius){
@@ -285,20 +300,13 @@ function animate(){
 
 requestAnimationFrame(animate)
 
-////////////////////////////////////////////////////////
-// MOVIMENTO PLAYER
-////////////////////////////////////////////////////////
-
 if(move.up) player.position.z-=0.3
 if(move.down) player.position.z+=0.3
 if(move.left) player.position.x-=0.3
 if(move.right) player.position.x+=0.3
 
-////////////////////////////////////////////////////////
-// SALTO FISICA
-////////////////////////////////////////////////////////
-
 velocityY-=0.01
+
 player.position.y+=velocityY
 
 if(player.position.y<=2){
@@ -309,17 +317,9 @@ onGround=true
 
 }
 
-////////////////////////////////////////////////////////
-// BULLETS
-////////////////////////////////////////////////////////
-
 bullets.forEach(b=>{
 b.position.add(b.velocity)
 })
-
-////////////////////////////////////////////////////////
-// BOT AI
-////////////////////////////////////////////////////////
 
 bots.forEach(bot=>{
 
@@ -341,21 +341,12 @@ playerHP-=0.03
 
 })
 
-////////////////////////////////////////////////////////
-// STORM
-////////////////////////////////////////////////////////
-
 updateStorm()
-
-////////////////////////////////////////////////////////
-// CAMERA FOLLOW
-////////////////////////////////////////////////////////
 
 camera.position.x=player.position.x
 camera.position.z=player.position.z+10
-camera.lookAt(player.position)
 
-////////////////////////////////////////////////////////
+camera.lookAt(player.position)
 
 renderer.render(scene,camera)
 
@@ -364,16 +355,30 @@ renderer.render(scene,camera)
 animate()
 
 ////////////////////////////////////////////////////////
-// FULLSCREEN AUTOMATICO
+// FULLSCREEN
 ////////////////////////////////////////////////////////
 
 document.body.addEventListener("click",()=>{
 
-if(document.fullscreenElement==null){
+if(!document.fullscreenElement){
 
 document.body.requestFullscreen()
 
 }
+
+})
+
+////////////////////////////////////////////////////////
+// RESIZE
+////////////////////////////////////////////////////////
+
+window.addEventListener("resize",()=>{
+
+camera.aspect=window.innerWidth/window.innerHeight
+
+camera.updateProjectionMatrix()
+
+renderer.setSize(window.innerWidth,window.innerHeight)
 
 })
 
