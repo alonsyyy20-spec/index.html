@@ -1,94 +1,8 @@
-<!DOCTYPE html>
-<html lang="it">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<title>Mini Battle Royale</title>
-
-<style>
-
-body{
-margin:0;
-overflow:hidden;
-background:black;
-touch-action:none;
-}
-
-#ui{
-position:absolute;
-top:10px;
-left:10px;
-color:white;
-font-family:Arial;
-}
-
-#controls{
-position:absolute;
-bottom:20px;
-left:20px;
-}
-
-#actions{
-position:absolute;
-bottom:20px;
-right:20px;
-}
-
-button{
-width:70px;
-height:70px;
-font-size:25px;
-border-radius:10px;
-border:none;
-margin:5px;
-background:rgba(255,255,255,0.3);
-color:white;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div id="ui">
-<div id="hp">HP:100</div>
-<div id="storm">Storm:200</div>
-</div>
-
-<div id="controls">
-
-<div>
-<button id="up">⬆️</button>
-</div>
-
-<div>
-<button id="left">⬅️</button>
-<button id="down">⬇️</button>
-<button id="right">➡️</button>
-</div>
-
-</div>
-
-<div id="actions">
-
-<button id="jump">🦘</button>
-<button id="shoot">🔫</button>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
-<script>
-
 ////////////////////////////////////////////////////////
-// SCENA
+// SETUP
 ////////////////////////////////////////////////////////
+
+const canvas = document.getElementById("game")
 
 const scene = new THREE.Scene()
 
@@ -101,22 +15,21 @@ window.innerWidth/window.innerHeight,
 1000
 )
 
-const renderer = new THREE.WebGLRenderer({antialias:true})
+const renderer = new THREE.WebGLRenderer({
+canvas:canvas,
+antialias:true
+})
 
 renderer.setSize(window.innerWidth,window.innerHeight)
-
-document.body.appendChild(renderer.domElement)
 
 ////////////////////////////////////////////////////////
 // LUCI
 ////////////////////////////////////////////////////////
 
 const ambient = new THREE.AmbientLight(0xffffff,0.6)
-
 scene.add(ambient)
 
 const sun = new THREE.DirectionalLight(0xffffff,1)
-
 sun.position.set(50,100,50)
 
 scene.add(sun)
@@ -129,7 +42,7 @@ const ground = new THREE.Mesh(
 
 new THREE.PlaneGeometry(500,500),
 
-new THREE.MeshLambertMaterial({color:0x228822})
+new THREE.MeshLambertMaterial({color:0x2ecc71})
 
 )
 
@@ -145,7 +58,7 @@ const player = new THREE.Mesh(
 
 new THREE.BoxGeometry(2,4,2),
 
-new THREE.MeshLambertMaterial({color:0x00aaff})
+new THREE.MeshLambertMaterial({color:0x3498db})
 
 )
 
@@ -153,7 +66,39 @@ player.position.y=2
 
 scene.add(player)
 
+////////////////////////////////////////////////////////
+// CAMERA
+////////////////////////////////////////////////////////
+
 camera.position.set(0,6,10)
+
+////////////////////////////////////////////////////////
+// MOVIMENTO
+////////////////////////////////////////////////////////
+
+const move={
+up:false,
+down:false,
+left:false,
+right:false
+}
+
+function bind(id,dir){
+
+const b=document.getElementById(id)
+
+b.addEventListener("pointerdown",()=>move[dir]=true)
+
+b.addEventListener("pointerup",()=>move[dir]=false)
+
+b.addEventListener("pointerleave",()=>move[dir]=false)
+
+}
+
+bind("up","up")
+bind("down","down")
+bind("left","left")
+bind("right","right")
 
 ////////////////////////////////////////////////////////
 // SALTO
@@ -162,7 +107,7 @@ camera.position.set(0,6,10)
 let velocityY=0
 let onGround=true
 
-function jump(){
+document.getElementById("jump").onclick=()=>{
 
 if(onGround){
 
@@ -174,39 +119,14 @@ onGround=false
 }
 
 ////////////////////////////////////////////////////////
-// MOVIMENTO
-////////////////////////////////////////////////////////
-
-const move={up:false,down:false,left:false,right:false}
-
-function bindButton(id,dir){
-
-const b=document.getElementById(id)
-
-b.addEventListener("pointerdown",()=>move[dir]=true)
-
-b.addEventListener("pointerup",()=>move[dir]=false)
-
-b.addEventListener("pointercancel",()=>move[dir]=false)
-
-b.addEventListener("pointerleave",()=>move[dir]=false)
-
-}
-
-bindButton("up","up")
-bindButton("down","down")
-bindButton("left","left")
-bindButton("right","right")
-
-////////////////////////////////////////////////////////
 // SPARO
 ////////////////////////////////////////////////////////
 
 const bullets=[]
 
-function shoot(){
+document.getElementById("shoot").onclick=()=>{
 
-const bullet = new THREE.Mesh(
+const bullet=new THREE.Mesh(
 
 new THREE.SphereGeometry(0.3),
 
@@ -224,8 +144,29 @@ scene.add(bullet)
 
 }
 
-document.getElementById("shoot").addEventListener("click",shoot)
-document.getElementById("jump").addEventListener("click",jump)
+////////////////////////////////////////////////////////
+// COSTRUZIONI
+////////////////////////////////////////////////////////
+
+document.getElementById("build").onclick=()=>{
+
+const wall=new THREE.Mesh(
+
+new THREE.BoxGeometry(5,5,1),
+
+new THREE.MeshLambertMaterial({color:0x8e5a2b})
+
+)
+
+wall.position.set(
+player.position.x,
+2,
+player.position.z-5
+)
+
+scene.add(wall)
+
+}
 
 ////////////////////////////////////////////////////////
 // BOT
@@ -235,11 +176,11 @@ const bots=[]
 
 function spawnBot(){
 
-const bot = new THREE.Mesh(
+const bot=new THREE.Mesh(
 
 new THREE.BoxGeometry(2,4,2),
 
-new THREE.MeshLambertMaterial({color:0xff0000})
+new THREE.MeshLambertMaterial({color:0xe74c3c})
 
 )
 
@@ -257,7 +198,7 @@ scene.add(bot)
 
 }
 
-for(let i=0;i<8;i++) spawnBot()
+for(let i=0;i<10;i++) spawnBot()
 
 ////////////////////////////////////////////////////////
 // STORM
@@ -272,10 +213,8 @@ stormRadius-=0.02
 document.getElementById("storm").innerText="Storm:"+Math.floor(stormRadius)
 
 const dist=Math.sqrt(
-
 player.position.x*player.position.x+
 player.position.z*player.position.z
-
 )
 
 if(dist>stormRadius){
@@ -306,7 +245,6 @@ if(move.left) player.position.x-=0.3
 if(move.right) player.position.x+=0.3
 
 velocityY-=0.01
-
 player.position.y+=velocityY
 
 if(player.position.y<=2){
@@ -318,7 +256,9 @@ onGround=true
 }
 
 bullets.forEach(b=>{
+
 b.position.add(b.velocity)
+
 })
 
 bots.forEach(bot=>{
@@ -335,7 +275,7 @@ bot.position.add(dir.multiplyScalar(0.03))
 
 if(dist<8){
 
-playerHP-=0.03
+playerHP-=0.05
 
 }
 
@@ -348,25 +288,15 @@ camera.position.z=player.position.z+10
 
 camera.lookAt(player.position)
 
+document.getElementById("hp").innerText="HP:"+Math.floor(playerHP)
+
+document.getElementById("players").innerText="Enemies:"+bots.length
+
 renderer.render(scene,camera)
 
 }
 
 animate()
-
-////////////////////////////////////////////////////////
-// FULLSCREEN
-////////////////////////////////////////////////////////
-
-document.body.addEventListener("click",()=>{
-
-if(!document.fullscreenElement){
-
-document.body.requestFullscreen()
-
-}
-
-})
 
 ////////////////////////////////////////////////////////
 // RESIZE
@@ -381,8 +311,3 @@ camera.updateProjectionMatrix()
 renderer.setSize(window.innerWidth,window.innerHeight)
 
 })
-
-</script>
-
-</body>
-</html>
